@@ -1,0 +1,12 @@
+<div class="toast-stack">
+  @for (t of toastSvc.toasts(); track trackById($index, t)) {
+    <div class="toast" [class]="'toast--' + cssClass(t)">
+      <span class="toast__icon">{{ icon(t) }}</span>
+      <div class="toast__body">
+        <span class="toast__msg">{{ t.message }}</span>
+        <span class="toast__badge">{{ label(t) }}</span>
+      </div>
+      <button class="toast__close" (click)="dismiss(t.id)" aria-label="Dismiss">✕</button>
+    </div>
+  }
+</div>

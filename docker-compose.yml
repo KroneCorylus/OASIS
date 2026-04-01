@@ -1,0 +1,60 @@
+services:
+  # ── Dev ──────────────────────────────────────────────────────────────────────
+  backend-dev:
+    profiles: ["dev"]
+    build:
+      context: ./backend
+      target: dev
+    env_file: .env
+    volumes:
+      - ./backend:/app
+      - ./model-pricing.json:/app/model-pricing.json:ro
+      - sqlite_data:/app/data
+      - go_cache:/root/.cache/go-build
+      - go_mod_cache:/go/pkg/mod
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  frontend-dev:
+    profiles: ["dev"]
+    build:
+      context: ./frontend
+      target: dev
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "4200:4200"
+    depends_on:
+      - backend-dev
+    restart: unless-stopped
+
+  # ── Prod ─────────────────────────────────────────────────────────────────────
+  backend-prod:
+    profiles: ["prod"]
+    build:
+      context: ./backend
+      target: prod
+    env_file: .env
+    volumes:
+      - ./model-pricing.json:/app/model-pricing.json:ro
+      - sqlite_data:/app/data
+    restart: unless-stopped
+
+  frontend-prod:
+    profiles: ["prod"]
+    build:
+      context: ./frontend
+      target: prod
+    ports:
+      - "5747:80"
+    depends_on:
+      - backend-prod
+    restart: unless-stopped
+
+volumes:
+  sqlite_data:
+  go_cache:
+  go_mod_cache:
+  frontend_node_modules:

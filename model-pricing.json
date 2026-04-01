@@ -1,0 +1,102 @@
+{
+  "__meta": {
+    "currency": "USD",
+    "unit": "per_1M_tokens",
+    "notes": "From platform.openai.com/docs/pricing (standard tier, Set 1 where two columns). Dated or chat ids (e.g. gpt-5.2-chat-latest) match the longest prefix key. gpt-5.4 / mini / nano / pro on regional data-residency endpoints: +10% uplift not applied here. Pro models with no Cached Input list use input_cached = input_uncached."
+  },
+  "_default": {
+    "input_uncached": 2.5,
+    "input_cached": 0.25,
+    "output": 10.0
+  },
+  "gpt-5.4-pro": {
+    "input_uncached": 30.0,
+    "input_cached": 30.0,
+    "output": 180.0
+  },
+  "gpt-5.4-mini": {
+    "input_uncached": 0.75,
+    "input_cached": 0.075,
+    "output": 4.5
+  },
+  "gpt-5.4-nano": {
+    "input_uncached": 0.2,
+    "input_cached": 0.02,
+    "output": 1.25
+  },
+  "gpt-5.4": {
+    "input_uncached": 2.5,
+    "input_cached": 0.25,
+    "output": 15.0
+  },
+  "gpt-5.2-pro": {
+    "input_uncached": 21.0,
+    "input_cached": 21.0,
+    "output": 168.0
+  },
+  "gpt-5.2": {
+    "input_uncached": 1.75,
+    "input_cached": 0.175,
+    "output": 14.0
+  },
+  "gpt-5.1": {
+    "input_uncached": 1.25,
+    "input_cached": 0.125,
+    "output": 10.0
+  },
+  "gpt-5-mini": {
+    "input_uncached": 0.25,
+    "input_cached": 0.025,
+    "output": 2.0
+  },
+  "gpt-5-nano": {
+    "input_uncached": 0.05,
+    "input_cached": 0.005,
+    "output": 0.4
+  },
+  "gpt-5-pro": {
+    "input_uncached": 15.0,
+    "input_cached": 15.0,
+    "output": 120.0
+  },
+  "gpt-5": {
+    "input_uncached": 1.25,
+    "input_cached": 0.125,
+    "output": 10.0
+  },
+  "gpt-4.1-mini": {
+    "input_uncached": 0.4,
+    "input_cached": 0.1,
+    "output": 1.6
+  },
+  "gpt-4.1-nano": {
+    "input_uncached": 0.1,
+    "input_cached": 0.025,
+    "output": 0.4
+  },
+  "gpt-4.1": {
+    "input_uncached": 2.0,
+    "input_cached": 0.5,
+    "output": 8.0
+  },
+  "gpt-4o-mini": {
+    "input_uncached": 0.15,
+    "input_cached": 0.075,
+    "output": 0.6
+  },
+  "gpt-4o": {
+    "input_uncached": 2.5,
+    "input_cached": 1.25,
+    "output": 10.0
+  },
+  "o1": {
+    "input_uncached": 15.0,
+    "input_cached": 7.5,
+    "output": 60.0
+  },
+  "o3-mini": {
+    "input_uncached": 1.1,
+    "input_cached": 0.55,
+    "output": 4.4
+  }
+}

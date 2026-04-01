@@ -1,10 +1,10 @@
 package sync
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log/slog"
-	"sync"
 	"time"
 
 	dbpkg "github.com/openai-dashboard/backend/internal/db"
@@ -13,10 +13,7 @@ import (
 	usagepkg "github.com/openai-dashboard/backend/internal/usage"
 )
 
-const (
-	concurrency      = 3
-	throttleInterval = 500 * time.Millisecond // max 2 API calls/sec across all goroutines
-)
+const bucketDelay = 3 * time.Second // pause between sequential bucket syncs
 
 // Syncer fills historical gaps in the DB on startup.
 type Syncer struct {
@@ -24,19 +21,15 @@ type Syncer struct {
 	aggregator *usagepkg.Aggregator
 	client     *openai.Client
 	lookback   int
-	throttle   <-chan time.Time // shared rate-limiter ticket
 }
 
 // New creates a new Syncer.
 func New(database *sql.DB, client *openai.Client, pt *pricing.Table, lookbackDays int) *Syncer {
-	agg := usagepkg.NewAggregator(database, client, pt)
-	ticker := time.NewTicker(throttleInterval)
 	return &Syncer{
 		db:         database,
-		aggregator: agg,
+		aggregator: usagepkg.NewAggregator(database, client, pt),
 		client:     client,
 		lookback:   lookbackDays,
-		throttle:   ticker.C,
 	}
 }
 
@@ -46,8 +39,26 @@ type syncTask struct {
 	label   string
 }
 
-// Run performs a full gap-fill sync.
-func (s *Syncer) Run() {
+// RunLoop runs immediately, then repeats every interval until ctx is cancelled.
+func (s *Syncer) RunLoop(ctx context.Context, interval time.Duration) {
+	s.Run(ctx)
+
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			slog.Info("sync: loop stopped")
+			return
+		case <-ticker.C:
+			s.Run(ctx)
+		}
+	}
+}
+
+// Run performs a full gap-fill sync sequentially, with a pause between buckets.
+func (s *Syncer) Run(ctx context.Context) {
 	slog.Info("sync: starting background gap-fill")
 
 	yesterday := time.Now().UTC().AddDate(0, 0, -1).Format("2006-01-02")
@@ -85,20 +96,22 @@ func (s *Syncer) Run() {
 		}
 	}
 
-	sem := make(chan struct{}, concurrency)
-	var wg sync.WaitGroup
-
-	for _, task := range tasks {
-		wg.Add(1)
-		sem <- struct{}{}
-		go func() {
-			defer wg.Done()
-			defer func() { <-sem }()
-			s.syncBucket(task, earliest, yesterday)
-		}()
+	for i, task := range tasks {
+		if ctx.Err() != nil {
+			slog.Info("sync: cancelled mid-run")
+			return
+		}
+		s.syncBucket(task, earliest, yesterday)
+		if i < len(tasks)-1 {
+			select {
+			case <-ctx.Done():
+				slog.Info("sync: cancelled mid-run")
+				return
+			case <-time.After(bucketDelay):
+			}
+		}
 	}
 
-	wg.Wait()
 	slog.Info("sync: gap-fill complete")
 }
 
@@ -124,9 +137,6 @@ func (s *Syncer) syncBucket(task syncTask, earliest, yesterday string) {
 	}
 
 	slog.Info("sync: syncing bucket", "bucket", task.label, "start", start, "end", yesterday)
-
-	// Acquire throttle token before hitting the OpenAI API.
-	<-s.throttle
 
 	if err := s.aggregator.FetchAndCacheRange(task.scope, task.scopeID, start, yesterday); err != nil {
 		slog.Error("sync: fetch and cache", "bucket", task.label, "error", err)

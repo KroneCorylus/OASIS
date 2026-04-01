@@ -51,8 +51,12 @@ func main() {
 	// Build OpenAI client.
 	client := openai.NewClient(cfg.OpenAIAdminKey)
 
-	// Start background sync.
-	go syncer.New(db, client, pt, cfg.SyncLookbackDays).Run()
+	// Root context cancelled on shutdown signal.
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// Start background sync: run immediately on startup, then every hour.
+	s := syncer.New(db, client, pt, cfg.SyncLookbackDays)
+	go s.RunLoop(ctx, time.Hour)
 
 	// Build server.
 	handler2 := server.New(cfg, db, client, pt)
@@ -79,11 +83,12 @@ func main() {
 
 	<-quit
 	slog.Info("shutting down server...")
+	cancel() // stop the sync loop
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCancel()
 
-	if err := srv.Shutdown(ctx); err != nil {
+	if err := srv.Shutdown(shutdownCtx); err != nil {
 		slog.Error("shutdown error", "error", err)
 		os.Exit(1)
 	}

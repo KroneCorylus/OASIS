@@ -1,4 +1,5 @@
 import { Injectable, signal, effect, computed } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 import { UsageService } from '../../core/api/usage.service';
 import { KeysService } from '../../core/api/keys.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -53,8 +54,31 @@ export class CompareState {
     private usageSvc: UsageService,
     private keysSvc: KeysService,
     private toastSvc: ToastService,
+    private router: Router,
+    private route: ActivatedRoute,
   ) {
+    // Initialize signals from URL query params.
+    const qp = this.route.snapshot.queryParams;
+    if (qp['key_a']) this.keyA.set(qp['key_a']);
+    if (qp['key_b']) this.keyB.set(qp['key_b']);
+    if (qp['start'] && qp['end']) this.dateRange.set({ start: qp['start'], end: qp['end'] });
+
     this.keysSvc.getKeys().subscribe({ next: k => this.keys.set(k), error: () => {} });
+
+    // Sync filter state to URL.
+    effect(() => {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {
+          key_a: this.keyA() || null,
+          key_b: this.keyB() || null,
+          start: this.dateRange().start,
+          end: this.dateRange().end,
+        },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+    });
 
     effect(() => {
       const keyA = this.keyA();

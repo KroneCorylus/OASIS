@@ -1,4 +1,5 @@
 import { Injectable, signal, effect, computed, inject } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 import { UsageService } from '../../core/api/usage.service';
 import { KeysService } from '../../core/api/keys.service';
 import { ProjectsService } from '../../core/api/projects.service';
@@ -7,7 +8,7 @@ import { UsageData, APIKey, Project, DateRange } from '../../core/models';
 
 @Injectable()
 export class DashboardState {
-  // Inputs (writable).
+  // Inputs (writable) — initialized from URL query params when present.
   readonly scope = signal<'org' | 'project' | 'api_key'>('org');
   readonly scopeId = signal<string>('');
   readonly dateRange = signal<DateRange>(defaultRange());
@@ -31,10 +32,33 @@ export class DashboardState {
     private keysSvc: KeysService,
     private projectsSvc: ProjectsService,
     private toastSvc: ToastService,
+    private router: Router,
+    private route: ActivatedRoute,
   ) {
+    // Initialize signals from URL query params.
+    const qp = this.route.snapshot.queryParams;
+    if (qp['scope'] === 'project' || qp['scope'] === 'api_key') this.scope.set(qp['scope']);
+    if (qp['scope_id']) this.scopeId.set(qp['scope_id']);
+    if (qp['start'] && qp['end']) this.dateRange.set({ start: qp['start'], end: qp['end'] });
+
     // Load keys and projects once.
     this.keysSvc.getKeys().subscribe({ next: k => this.keys.set(k), error: () => {} });
     this.projectsSvc.getProjects().subscribe({ next: p => this.projects.set(p), error: () => {} });
+
+    // Sync filter state to URL (replace so filter changes don't pollute history).
+    effect(() => {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {
+          scope: this.scope(),
+          scope_id: this.scopeId() || null,
+          start: this.dateRange().start,
+          end: this.dateRange().end,
+        },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+    });
 
     // React to filter changes.
     effect(() => {

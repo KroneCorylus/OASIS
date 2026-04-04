@@ -47,6 +47,8 @@ services:
     build:
       context: ./frontend
       target: prod
+    environment:
+      - BACKEND_PORT=${PORT:-8080}
     ports:
       - "5747:80"
     depends_on:

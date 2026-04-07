@@ -22,7 +22,7 @@ func NewClient(adminKey string) *Client {
 	return &Client{
 		adminKey: adminKey,
 		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: 120 * time.Second,
 		},
 	}
 }

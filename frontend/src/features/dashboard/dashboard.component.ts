@@ -10,6 +10,7 @@ import { ModelBreakdownPieComponent } from './charts/model-breakdown-pie/model-b
 import { CacheRatioBarComponent } from './charts/cache-ratio-bar/cache-ratio-bar.component';
 import { RequestsPerDayComponent } from './charts/requests-per-day/requests-per-day.component';
 import { CostBreakdownComponent } from './charts/cost-breakdown/cost-breakdown.component';
+import { TokenCostProportionComponent } from './charts/token-cost-proportion/token-cost-proportion.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { DateRange } from '../../core/models';
@@ -28,6 +29,7 @@ import { DateRange } from '../../core/models';
     CacheRatioBarComponent,
     RequestsPerDayComponent,
     CostBreakdownComponent,
+    TokenCostProportionComponent,
     ErrorMessageComponent,
   ],
   providers: [DashboardState],
@@ -107,6 +109,12 @@ import { DateRange } from '../../core/models';
             [loading]="state.isLoading()">
           </app-cache-ratio-bar>
         </div>
+
+        <app-token-cost-proportion
+          class="full-width-chart"
+          [byModel]="state.data()?.by_model ?? []"
+          [loading]="state.isLoading()">
+        </app-token-cost-proportion>
       }
     </div>
   `,
@@ -122,6 +130,7 @@ import { DateRange } from '../../core/models';
     .charts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(500px, 1fr)); gap: 16px; margin-top: 16px; }
     app-summary-cards { display: block; margin-top: 16px; }
     app-error-message { display: block; margin-top: 8px; }
+    .full-width-chart { display: block; margin-top: 16px; }
     .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 24px; gap: 12px; color: #64748b; }
     .empty-icon { width: 48px; height: 48px; color: #475569; }
     .empty-title { margin: 0; font-size: 16px; font-weight: 600; color: #94a3b8; }

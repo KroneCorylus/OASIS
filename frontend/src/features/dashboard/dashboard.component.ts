@@ -8,6 +8,8 @@ import { TokenTimeseriesComponent } from './charts/token-timeseries/token-timese
 import { CostTimeseriesComponent } from './charts/cost-timeseries/cost-timeseries.component';
 import { ModelBreakdownPieComponent } from './charts/model-breakdown-pie/model-breakdown-pie.component';
 import { CacheRatioBarComponent } from './charts/cache-ratio-bar/cache-ratio-bar.component';
+import { RequestsPerDayComponent } from './charts/requests-per-day/requests-per-day.component';
+import { CostBreakdownComponent } from './charts/cost-breakdown/cost-breakdown.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { DateRange } from '../../core/models';
@@ -24,6 +26,8 @@ import { DateRange } from '../../core/models';
     CostTimeseriesComponent,
     ModelBreakdownPieComponent,
     CacheRatioBarComponent,
+    RequestsPerDayComponent,
+    CostBreakdownComponent,
     ErrorMessageComponent,
   ],
   providers: [DashboardState],
@@ -87,6 +91,16 @@ import { DateRange } from '../../core/models';
             [byModel]="state.data()?.by_model ?? []"
             [loading]="state.isLoading()">
           </app-model-breakdown-pie>
+
+          <app-requests-per-day
+            [byDate]="state.data()?.by_date ?? []"
+            [loading]="state.isLoading()">
+          </app-requests-per-day>
+
+          <app-cost-breakdown
+            [byDate]="state.data()?.by_date ?? []"
+            [loading]="state.isLoading()">
+          </app-cost-breakdown>
 
           <app-cache-ratio-bar
             [byDate]="state.data()?.by_date ?? []"

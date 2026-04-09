@@ -22,6 +22,9 @@ export interface ModelStat {
   output_tokens: number;
   requests: number;
   cost_usd: number;
+  cost_output: number;
+  cost_input_cached: number;
+  cost_input_uncached: number;
 }
 
 export interface DayStat {

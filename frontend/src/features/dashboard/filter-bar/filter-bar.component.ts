@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DateRangePickerComponent } from '../../../shared/components/date-range-picker/date-range-picker.component';
@@ -11,25 +11,19 @@ import { APIKey, Project, DateRange } from '../../../core/models';
   template: `
     <div class="filter-bar">
       <div class="scope-group">
-        <label class="filter-label">Scope</label>
-        <select class="filter-select" [ngModel]="scope" (ngModelChange)="onScopeChange($event)">
-          <option value="org">Organisation</option>
-          <option value="project">Project</option>
-          <option value="api_key">API Key</option>
+        <label class="filter-label">Project</label>
+        <select class="filter-select" [ngModel]="selectedProjectId" (ngModelChange)="onProjectChange($event)">
+          <option value="">All</option>
+          @for (p of projects; track p.id) {
+            <option [value]="p.id">{{ p.name }}</option>
+          }
         </select>
-        @if (scope === 'project' && projects.length > 0) {
-          <select class="filter-select" [ngModel]="scopeId" (ngModelChange)="scopeIdChange.emit($event)">
-            <option value="">All Projects</option>
-            @for (p of projects; track p.id) {
-              <option [value]="p.id">{{ p.name }}</option>
-            }
-          </select>
-        }
-        @if (scope === 'api_key' && keys.length > 0) {
-          <select class="filter-select" [ngModel]="scopeId" (ngModelChange)="scopeIdChange.emit($event)">
-            <option value="">Select Key</option>
-            @for (k of keys; track k.id) {
-              <option [value]="k.id">{{ k.name || k.redacted_value }} ({{ k.project_name }})</option>
+        @if (selectedProjectId) {
+          <label class="filter-label">API Key</label>
+          <select class="filter-select" [ngModel]="selectedKeyId" (ngModelChange)="onKeyChange($event)">
+            <option value="">All</option>
+            @for (k of filteredKeys; track k.id) {
+              <option [value]="k.id">{{ k.name || k.redacted_value }}</option>
             }
           </select>
         }
@@ -53,7 +47,7 @@ import { APIKey, Project, DateRange } from '../../../core/models';
     .filter-select:focus { outline: none; border-color: rgba(99,102,241,0.5); }
   `],
 })
-export class FilterBarComponent {
+export class FilterBarComponent implements OnChanges {
   @Input() scope: 'org' | 'project' | 'api_key' = 'org';
   @Input() scopeId = '';
   @Input() dateRange!: DateRange;
@@ -66,8 +60,50 @@ export class FilterBarComponent {
   @Output() dateRangeChange = new EventEmitter<DateRange>();
   @Output() refreshChange = new EventEmitter<void>();
 
-  onScopeChange(scope: 'org' | 'project' | 'api_key'): void {
-    this.scopeChange.emit(scope);
-    this.scopeIdChange.emit('');
+  selectedProjectId = '';
+  selectedKeyId = '';
+
+  private initialized = false;
+
+  get filteredKeys(): APIKey[] {
+    return this.keys.filter(k => k.project_id === this.selectedProjectId);
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Restore selections from URL params once keys and projects have loaded.
+    if (!this.initialized && this.keys.length > 0 && this.projects.length > 0) {
+      if (this.scope === 'api_key' && this.scopeId) {
+        const key = this.keys.find(k => k.id === this.scopeId);
+        this.selectedProjectId = key?.project_id ?? '';
+        this.selectedKeyId = this.scopeId;
+      } else if (this.scope === 'project' && this.scopeId) {
+        this.selectedProjectId = this.scopeId;
+        this.selectedKeyId = '';
+      }
+      this.initialized = true;
+    }
+  }
+
+  onProjectChange(projectId: string): void {
+    this.selectedProjectId = projectId;
+    this.selectedKeyId = '';
+    if (projectId) {
+      this.scopeChange.emit('project');
+      this.scopeIdChange.emit(projectId);
+    } else {
+      this.scopeChange.emit('org');
+      this.scopeIdChange.emit('');
+    }
+  }
+
+  onKeyChange(keyId: string): void {
+    this.selectedKeyId = keyId;
+    if (keyId) {
+      this.scopeChange.emit('api_key');
+      this.scopeIdChange.emit(keyId);
+    } else {
+      this.scopeChange.emit('project');
+      this.scopeIdChange.emit(this.selectedProjectId);
+    }
   }
 }

@@ -40,6 +40,7 @@ import { AuthService } from '../../core/auth/auth.service';
           [keys]="state.keys()"
           [keyA]="state.keyA()"
           [keyB]="state.keyB()"
+          [loading]="state.keysLoading()"
           (keyAChange)="state.keyA.set($event)"
           (keyBChange)="state.keyB.set($event)">
         </app-key-selector>

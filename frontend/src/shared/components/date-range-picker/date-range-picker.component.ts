@@ -21,13 +21,11 @@ import { DateRange } from '../../../core/models';
         }
       </div>
 
-      @if (activePreset !== 'Today') {
-        <div class="inputs">
-          <input type="date" [(ngModel)]="startVal" (change)="onInputChange()" class="date-input" />
-          <span class="separator">—</span>
-          <input type="date" [(ngModel)]="endVal" (change)="onInputChange()" class="date-input" />
-        </div>
-      }
+      <div class="inputs">
+        <input type="date" [(ngModel)]="startVal" (change)="onInputChange()" class="date-input" />
+        <span class="separator">—</span>
+        <input type="date" [(ngModel)]="endVal" (change)="onInputChange()" class="date-input" />
+      </div>
 
       @if (endsToday) {
         <button class="refresh-btn" (click)="onRefresh()" [title]="refreshTitle">

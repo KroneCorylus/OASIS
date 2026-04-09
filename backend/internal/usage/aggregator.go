@@ -34,12 +34,15 @@ const (
 
 // ModelStat aggregates token counts and cost for one model.
 type ModelStat struct {
-	Model         string  `json:"model"`
-	InputCached   int64   `json:"input_cached"`
-	InputUncached int64   `json:"input_uncached"`
-	OutputTokens  int64   `json:"output_tokens"`
-	Requests      int64   `json:"requests"`
-	CostUSD       float64 `json:"cost_usd"`
+	Model             string  `json:"model"`
+	InputCached       int64   `json:"input_cached"`
+	InputUncached     int64   `json:"input_uncached"`
+	OutputTokens      int64   `json:"output_tokens"`
+	Requests          int64   `json:"requests"`
+	CostUSD           float64 `json:"cost_usd"`
+	CostOutput        float64 `json:"cost_output"`
+	CostInputCached   float64 `json:"cost_input_cached"`
+	CostInputUncached float64 `json:"cost_input_uncached"`
 }
 
 // DayStat groups model stats for one calendar day.
@@ -323,6 +326,9 @@ func (a *Aggregator) aggregate(rows []db.UsageRow, f QueryFilter) *UsageData {
 		costInputUncached := float64(row.InputUncached) / 1_000_000 * price.InputUncached
 		cost := costOutput + costInputCached + costInputUncached
 		s.CostUSD += cost
+		s.CostOutput += costOutput
+		s.CostInputCached += costInputCached
+		s.CostInputUncached += costInputUncached
 
 		if _, ok := byModel[row.Model]; !ok {
 			byModel[row.Model] = &ModelTotal{Model: row.Model}

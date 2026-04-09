@@ -15,6 +15,7 @@ export class CompareState {
   readonly isLoading = signal(false);
   readonly error = signal<string | null>(null);
   readonly keys = signal<APIKey[]>([]);
+  readonly keysLoading = signal(true);
 
   // Frontend-only model exclusion per key
   readonly excludedA = signal<Set<string>>(new Set<string>());
@@ -63,7 +64,10 @@ export class CompareState {
     if (qp['key_b']) this.keyB.set(qp['key_b']);
     if (qp['start'] && qp['end']) this.dateRange.set({ start: qp['start'], end: qp['end'] });
 
-    this.keysSvc.getKeys().subscribe({ next: k => this.keys.set(k), error: () => {} });
+    this.keysSvc.getKeys().subscribe({
+      next: k => { this.keys.set(k); this.keysLoading.set(false); },
+      error: () => { this.keysLoading.set(false); },
+    });
 
     // Sync filter state to URL.
     effect(() => {
